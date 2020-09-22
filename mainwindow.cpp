@@ -19,14 +19,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
+//    getWesiteData();
     storeEasyDL();
+}
+
+size_t read_data(void *ptr, size_t size, size_t count, struct url_data *data) {
+    return 0;
 }
 
 int storeEasyDL() {
     const char *post_data_filename = "c:\\1.jpg";
 
     FILE *fp = NULL;
-    struct stat stbuf = { 0 };
+    struct stat stbuf = { 0, };
 
     fp = fopen(post_data_filename, "rb");
 
@@ -51,6 +56,7 @@ int storeEasyDL() {
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE,(curl_off_t)stbuf.st_size);
         curl_easy_setopt(curl, CURLOPT_READDATA, (void *)fp);
+        curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_data);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
@@ -62,3 +68,4 @@ int storeEasyDL() {
     fclose(fp);
     return 0;
 }
+
