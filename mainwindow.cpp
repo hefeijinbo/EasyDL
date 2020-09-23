@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "curl/curl.h"
 #include <sys/stat.h>
+#include "cstdio"
+using namespace std;
 
 int storeEasyDL();
 
@@ -23,8 +25,41 @@ void MainWindow::on_pushButton_clicked()
     storeEasyDL();
 }
 
-size_t read_data(void *ptr, size_t size, size_t count, struct url_data *data) {
-    return 0;
+struct url_data {
+    size_t size;
+    char* data;
+};
+
+static std::string strdetect_result;
+
+//size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userdata)
+//{
+//  FILE *readhere = (FILE *)userdata;
+//  curl_off_t nread;
+
+//  /* copy as much data as possible into the 'ptr' buffer, but no more than
+//     'size' * 'nmemb' bytes! */
+//  size_t retcode = fread(ptr, size, nmemb, readhere);
+
+//  nread = (curl_off_t)retcode;
+
+//  fprintf(stderr, "*** We read %" CURL_FORMAT_CURL_OFF_T
+//          " bytes from file\n", nread);
+//  return retcode;
+//}
+
+size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+    string data((const char*) ptr, (size_t) size * nmemb);
+//        *((std::stringstream*) stream) << data << endl;
+        return size * nmemb;
+}
+
+size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+    string data((const char*) ptr, (size_t) size * nmemb);
+//        *((std::stringstream*) stream) << data << endl;
+        return size * nmemb;
 }
 
 int storeEasyDL() {
@@ -55,8 +90,10 @@ int storeEasyDL() {
         curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:24401?threshold=0.1");
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE,(curl_off_t)stbuf.st_size);
+        curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+
         curl_easy_setopt(curl, CURLOPT_READDATA, (void *)fp);
-        curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_data);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
