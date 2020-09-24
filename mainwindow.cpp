@@ -3,6 +3,7 @@
 #include "curl/curl.h"
 #include <sys/stat.h>
 #include "cstdio"
+#include <iostream>
 using namespace std;
 
 int storeEasyDL();
@@ -22,6 +23,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
 //    getWesiteData();
+
     storeEasyDL();
 }
 
@@ -48,17 +50,26 @@ static std::string strdetect_result;
 //  return retcode;
 //}
 
-size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
+size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
-    string data((const char*) ptr, (size_t) size * nmemb);
-//        *((std::stringstream*) stream) << data << endl;
-        return size * nmemb;
+    FILE *readhere = (FILE *)userdata;
+      curl_off_t nread;
+
+      /* copy as much data as possible into the 'ptr' buffer, but no more than
+         'size' * 'nmemb' bytes! */
+      size_t retcode = fread(ptr, size, nmemb, readhere);
+
+      nread = (curl_off_t)retcode;
+
+      fprintf(stderr, "*** We read %" CURL_FORMAT_CURL_OFF_T
+              " bytes from file\n", nread);
+      return retcode;
 }
 
 size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
 {
     string data((const char*) ptr, (size_t) size * nmemb);
-//        *((std::stringstream*) stream) << data << endl;
+    cout << "write callback" << data << endl;
         return size * nmemb;
 }
 
@@ -66,7 +77,7 @@ int storeEasyDL() {
     const char *post_data_filename = "c:\\1.jpg";
 
     FILE *fp = NULL;
-    struct stat stbuf = { 0, };
+    struct stat stbuf = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     fp = fopen(post_data_filename, "rb");
 
